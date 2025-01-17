@@ -16,7 +16,7 @@ class BinaryPartition(Partition):
     Implementation of Binary Partition
     """
 
-    def __init__(self, domain=None, node=P_node):
+    def __init__(self, domain=None, node=P_node, min_size=None):
         """
         Initialization of the Binary Partition
 
@@ -33,6 +33,7 @@ class BinaryPartition(Partition):
         if domain is None:
             raise ValueError("domain is not provided to the Binary Partition")
         super(BinaryPartition, self).__init__(domain=domain, node=node)
+        self.min_size = min_size
 
     # Rewrite the make_children function in the Partition class
     def make_children(self, parent, newlayer=False):
@@ -55,7 +56,22 @@ class BinaryPartition(Partition):
         """
 
         parent_domain = parent.get_domain()
-        dim = np.random.randint(0, len(parent_domain))
+
+        splittable_dims = []
+        for i, dim_range in enumerate(parent_domain):
+            if self.min_size is None:
+                splittable_dims.append(i)  # No size constraint, all dimensions are splittable
+            else:
+                mid_point = (dim_range[0] + dim_range[1]) / 2
+                if (mid_point - dim_range[0]) >= self.min_size and (dim_range[1] - mid_point) >= self.min_size:
+                    splittable_dims.append(i)
+
+        if not splittable_dims:
+            #No dimensions are aplittable; skip creating children
+            parent.mark_unsplittable()
+            return
+
+        dim = np.random.choice(splittable_dims)
         selected_dim = parent_domain[dim]
 
         domain1 = copy.deepcopy(parent_domain)

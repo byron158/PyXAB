@@ -48,6 +48,16 @@ class P_node:
             # TODO: Different Domains Other Than Continuous Domains
 
         self.c_point = point
+        self.unsplittable = False
+
+    def mark_unsplittable(self):
+        #Mark node as unsplittable
+        self.unsplittable = True
+
+    def is_unsplittable(self):
+        #check if node is unsplittable
+        return self.unsplittable
+
 
     def update_children(self, children):
         """

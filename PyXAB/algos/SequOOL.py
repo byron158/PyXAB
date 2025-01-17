@@ -89,7 +89,7 @@ class SequOOL(Algorithm):
     The implementation of the SequOOL algorithm (Barlett, 2019)
     """
 
-    def __init__(self, n=1000, domain=None, partition=BinaryPartition):
+    def __init__(self, n=1000, domain=None, partition=BinaryPartition, min_size = None):
         """
         The initialization of the SequOOL algorithm
         
@@ -107,7 +107,7 @@ class SequOOL(Algorithm):
             raise ValueError("Parameter space is not given.")
         if partition is None:
             raise ValueError("Partition of the parameter space is not given.")
-        self.partition = partition(domain=domain, node=SequOOL_node)
+        self.partition = partition(domain=domain, node=SequOOL_node, min_size=min_size)
         self.iteration = 0
 
         self.h_max = math.floor(n / self.harmonic_series_sum(n))
@@ -156,7 +156,7 @@ class SequOOL(Algorithm):
         if self.curr_depth <= self.h_max:
             if self.curr_depth == 0:
                 node = node_list[0][0]
-                if node.get_children() is None:
+                if node.get_children() is None and not node.is_unsplittable():
                     self.partition.make_children(
                         node, newlayer=(self.curr_depth >= self.partition.get_depth())
                     )
@@ -185,7 +185,7 @@ class SequOOL(Algorithm):
                             max_value = node.get_reward()
                             max_node = node
 
-                if max_node.get_children() is None:
+                if max_node.get_children() is None and not node.is_unsplittable():
                     self.partition.make_children(
                         max_node,
                         newlayer=(self.curr_depth >= self.partition.get_depth()),
