@@ -73,6 +73,7 @@ class BinaryPartition(Partition):
         if not splittable_dims:
             #No dimensions are aplittable; skip creating children
             parent.mark_unsplittable()
+            print(f"No dimensions are splittable; skip creating children. Node point: {parent.get_cpoint()}")
             return
 
         dim = np.random.choice(splittable_dims)

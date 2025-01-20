@@ -164,7 +164,7 @@ class SequOOL(Algorithm):
                         node, newlayer=(self.curr_depth >= self.partition.get_depth())
                     ) #note that make_children triggers unsplittable = True if node can not be split further due to min size
 
-                if node.is_splittable(): #checks if node is unsplittable
+                if not node.is_splittable(): #checks if node is unsplittable
                     self.curr_node = node #sets the current node to the unsplittable node
                     return node.get_cpoint() #returns the center point of the unsplittable node
         
