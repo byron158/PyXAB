@@ -54,9 +54,9 @@ class P_node:
         #Mark node as unsplittable
         self.unsplittable = True
 
-    def is_unsplittable(self):
+    def is_splittable(self):
         #check if node is unsplittable
-        return self.unsplittable
+        return not self.unsplittable
 
 
     def update_children(self, children):

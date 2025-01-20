@@ -115,6 +115,7 @@ class SequOOL(Algorithm):
         self.loc = 0
         self.open_loc = 0
         self.chosen = []
+        self.min_size = min_size
 
     @staticmethod
     def harmonic_series_sum(n):
@@ -152,60 +153,81 @@ class SequOOL(Algorithm):
         """
         node_list = self.partition.get_node_list()
         self.iteration = t
-
-        if self.curr_depth <= self.h_max:
-            if self.curr_depth == 0:
-                node = node_list[0][0]
-                if node.get_children() is None and not node.is_unsplittable():
-                    self.partition.make_children(
+        #### WARNING: This is where the code deviates significantly from the original
+        # The original code used an if statement here, but we use a while loop 
+        while self.curr_depth <= self.h_max: #check if the current depth is less than the maximum depth
+            if self.curr_depth == 0: #check if the current depth is 0, which is the base of the binary tree
+                node = node_list[0][0] #gets the root node, base of binary tree
+                
+                if node.get_children() is None: #checks if root node has children
+                    self.partition.make_children( #makes children for the root node if it does not have any
                         node, newlayer=(self.curr_depth >= self.partition.get_depth())
-                    )
-                if self.loc < len(node.get_children()):
-                    if self.loc == len(node.get_children()) - 1:
-                        self.loc = 0
-                        self.curr_depth += 1
-                        self.budget = math.floor(self.h_max / self.curr_depth)
-                        self.chosen.append(node.get_children()[-1])
-                        self.curr_node = node.get_children()[-1]
-                        return node.get_children()[-1].get_cpoint()
+                    ) #note that make_children triggers unsplittable = True if node can not be split further due to min size
+
+                if node.is_splittable(): #checks if node is unsplittable
+                    self.curr_node = node #sets the current node to the unsplittable node
+                    return node.get_cpoint() #returns the center point of the unsplittable node
+        
+                if self.loc < len(node.get_children()): #if the current location of sequool is less than the node's children (exploring the root node's children)
+                    if self.loc == len(node.get_children()) - 1: #if the current location is the last child of the node
+                        self.loc = 0 #reset the location tracker
+                        self.curr_depth += 1 #increment the current depth (move to a deeper layer of the tree) (this moves the state machine to the next else block)
+                        self.budget = math.floor(self.h_max / self.curr_depth) #update the budget
+                        self.chosen.append(node.get_children()[-1]) #append the last child to the chosen list (for tracking chosen points)
+                        self.curr_node = node.get_children()[-1] #set the current node to the last child
+                        return node.get_children()[-1].get_cpoint() #return the center point of the last child
                     else:
-                        self.loc += 1
-                        self.chosen.append(node.get_children()[self.loc - 1])
-                        self.curr_node = node.get_children()[self.loc - 1]
-                        return node.get_children()[self.loc - 1].get_cpoint()
+                        self.loc += 1 #increment the location tracker (keep exploring the root node's children)
+                        self.chosen.append(node.get_children()[self.loc - 1]) #add the loc's node to the chosen list
+                        self.curr_node = node.get_children()[self.loc - 1] #set the current node to the loc's node
+                        return node.get_children()[self.loc - 1].get_cpoint() ##return the center point of the loc's node
             else:
                 max_value = -np.inf
                 max_node = None
                 num = 0
-                for i in range(len(node_list[self.curr_depth])):
-                    node = node_list[self.curr_depth][i]
-                    if node.not_opened():
-                        num += 1
-                        if node.get_reward() >= max_value:
-                            max_value = node.get_reward()
-                            max_node = node
 
-                if max_node.get_children() is None and not node.is_unsplittable():
-                    self.partition.make_children(
+                for i in range(len(node_list[self.curr_depth])): #iterates through the nodes in the current depth
+                    node = node_list[self.curr_depth][i] #gets the node at the current depth and index i
+                    if node.not_opened() and node.is_splittable(): #Checks if node is unopened/unexplored and if it is splittable
+                        num += 1 #increment the number of nodes that are both unopened and is splittable
+                        if node.get_reward() >= max_value: #pick the node from list that has the highest reward; promotes exploring the maximum reward first
+                            max_value = node.get_reward() #update the max value
+                            max_node = node #set max node to the node with the highest reward
+
+                #If no splittable or open nodes found, move up one depth level
+                if max_node is None:
+                    self.curr_depth -= 1  #Backtrack to the previous level
+                    if self.curr_depth < 0: #if reached depth 0, reched root node
+                        self.curr_node = node_list[0][0]  #Go back to the root node
+                        return node_list[0][0].get_cpoint() #Return the center point of the root node
+                    self.budget = math.floor(self.h_max / self.curr_depth) #if curr_depth is valid, reset budget to new depth
+                    continue  #Continue searching at a shallower level
+
+                if max_node.get_children() is None: #if the max node does not have children
+                    self.partition.make_children( #make children for the max node
                         max_node,
                         newlayer=(self.curr_depth >= self.partition.get_depth()),
-                    )
-                if self.loc < len(max_node.get_children()):
-                    if self.loc == len(max_node.get_children()) - 1:
-                        max_node.open()
-                        self.loc = 0
-                        self.budget -= 1
-                        if self.budget == 0 or num == 1:
-                            self.curr_depth += 1
-                            self.budget = math.floor(self.h_max / self.curr_depth)
-                        self.curr_node = max_node.get_children()[-1]
-                        self.chosen.append(max_node.get_children()[-1])
-                        return max_node.get_children()[-1].get_cpoint()
+                    )#note that make_children triggers unsplittable = True if node can not be split further due to min size
+
+                if not max_node.is_splittable(): #skip this node if it was not splittable, because it will not have children
+                    continue  
+
+                if self.loc < len(max_node.get_children()): #if the current location is less than the max node's children
+                    if self.loc == len(max_node.get_children()) - 1: #if the current location is the last child of the max node
+                        max_node.open() #open the max node, indicating that we explored all of its children
+                        self.loc = 0 #reset the location tracker
+                        self.budget -= 1 #decrement the budget
+                        if self.budget == 0 or num == 1: #if the budget is 0 or there is only one node to explore
+                            self.curr_depth += 1 #increment the current depth
+                            self.budget = math.floor(self.h_max / self.curr_depth) #update the budget
+                        self.curr_node = max_node.get_children()[-1] #set the current node to the last child of the max node
+                        self.chosen.append(max_node.get_children()[-1]) #add the last child to the chosen list
+                        return max_node.get_children()[-1].get_cpoint() #return the center point of the last child
                     else:
-                        self.loc += 1
-                        self.curr_node = max_node.get_children()[self.loc - 1]
-                        self.chosen.append(max_node.get_children()[self.loc - 1])
-                        return max_node.get_children()[self.loc - 1].get_cpoint()
+                        self.loc += 1 #increment the location tracker
+                        self.curr_node = max_node.get_children()[self.loc - 1] #set the current node to the loc's child
+                        self.chosen.append(max_node.get_children()[self.loc - 1]) #add the loc's child to the chosen list
+                        return max_node.get_children()[self.loc - 1].get_cpoint()#return the center point of the loc's child
         else:
             self.curr_node = node_list[0][0]
             return node_list[0][0].get_cpoint()

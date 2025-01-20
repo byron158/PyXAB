@@ -34,6 +34,7 @@ class BinaryPartition(Partition):
             raise ValueError("domain is not provided to the Binary Partition")
         super(BinaryPartition, self).__init__(domain=domain, node=node)
         self.min_size = min_size
+    
 
     # Rewrite the make_children function in the Partition class
     def make_children(self, parent, newlayer=False):
@@ -57,12 +58,15 @@ class BinaryPartition(Partition):
 
         parent_domain = parent.get_domain()
 
+        if not parent.is_splittable():
+            return
+
         splittable_dims = []
-        for i, dim_range in enumerate(parent_domain):
+        for i, dim_range in enumerate(parent_domain): #check all dimensions to see if they are splittable, it they aren't they are removed from the parameter selection list for this node
             if self.min_size is None:
                 splittable_dims.append(i)  # No size constraint, all dimensions are splittable
             else:
-                mid_point = (dim_range[0] + dim_range[1]) / 2
+                mid_point = (dim_range[0] + dim_range[1]) / 2 
                 if (mid_point - dim_range[0]) >= self.min_size and (dim_range[1] - mid_point) >= self.min_size:
                     splittable_dims.append(i)
 
