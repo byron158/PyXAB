@@ -263,7 +263,7 @@ class SequOOLWithLimits(SequOOL):
         partition:
             The partition choice of the algorithm
         """
-        super(SequOOLWithLimits, self).__init__()
+        super(SequOOLWithLimits, self).__init__(n, domain, partition)
         if domain is None:
             raise ValueError("Parameter space is not given.")
         if partition is None:

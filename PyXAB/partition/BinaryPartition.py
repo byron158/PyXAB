@@ -109,7 +109,7 @@ class BinaryPartitionWithLimits(BinaryPartition):
         """
         if domain is None:
             raise ValueError("domain is not provided to the Binary Partition")
-        super(BinaryPartitionWithLimits, self).__init__(domain=domain, node=node, min_size=min_size, min_precision=min_precision)
+        super(BinaryPartitionWithLimits, self).__init__(domain=domain, node=node)
         self.min_size = min_size
         self.min_precision = min_precision
     
