@@ -58,7 +58,6 @@ class P_node:
         #check if node is unsplittable
         return not self.unsplittable
 
-
     def update_children(self, children):
         """
         The function to update the children of the node
