@@ -358,7 +358,7 @@ class SequOOLWithLimits(SequOOL):
                 #If no splittable or open nodes found, move up one depth level
                 if max_node is None:
                     self.curr_depth -= 1  #Backtrack to the previous level
-                    if self.curr_depth < 0: #if reached depth 0, reched root node
+                    if self.curr_depth == 0: #if reached depth 0, reched root node
                         self.curr_node = node_list[0][0]  #Go back to the root node
                         return node_list[0][0].get_cpoint() #Return the center point of the root node
                     self.budget = math.floor(self.h_max / self.curr_depth) #if curr_depth is valid, reset budget to new depth
