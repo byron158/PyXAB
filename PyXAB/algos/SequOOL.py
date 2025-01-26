@@ -9,7 +9,7 @@ import random
 import numpy as np
 from PyXAB.algos.Algo import Algorithm
 from PyXAB.partition.Node import P_node
-from PyXAB.partition.BinaryPartition import BinaryPartition
+from PyXAB.partition.BinaryPartition import BinaryPartition, BinaryPartitionWithLimits
 import pdb
 
 
@@ -250,7 +250,7 @@ class SequOOLWithLimits(SequOOL):
     The implementation of the SequOOL algorithm (Barlett, 2019), but with additional constraints on the minimum size of the domain and minimum precision
     """
     
-    def __init__(self, n=1000, domain=None, partition=BinaryPartition, min_size = None, min_precision = None):
+    def __init__(self, n=1000, domain=None, partition=BinaryPartitionWithLimits, min_precision = None):
         """
         The initialization of the SequOOL algorithm
         
@@ -268,7 +268,7 @@ class SequOOLWithLimits(SequOOL):
             raise ValueError("Parameter space is not given.")
         if partition is None:
             raise ValueError("Partition of the parameter space is not given.")
-        self.partition = partition(domain=domain, node=SequOOL_node, min_size=min_size , min_precision=min_precision)
+        self.partition = partition(domain=domain, node=SequOOL_node, min_precision=min_precision)
         self.iteration = 0
 
         self.h_max = math.floor(n / self.harmonic_series_sum(n))
@@ -276,27 +276,6 @@ class SequOOLWithLimits(SequOOL):
         self.loc = 0
         self.open_loc = 0
         self.chosen = []
-        self.min_size = min_size
-
-    @staticmethod
-    def harmonic_series_sum(n):
-        """
-        A static method for computing the summation of harmonic series
-        
-        Parameters
-        ----------
-        n: int
-            The number of terms in the summation
-        
-        Returns
-        -------
-        res: float
-            The sum of the series
-        """
-        res = 0
-        for i in range(1, n + 1):
-            res += 1 / i
-        return res
 
     def pull(self, t):
         """
@@ -393,38 +372,3 @@ class SequOOLWithLimits(SequOOL):
             self.curr_node = node_list[0][0]
             return node_list[0][0].get_cpoint()
 
-    def receive_reward(self, t, reward):
-        """
-        The receive_reward function of SequOOL to obtain the reward and update Statistics
-        
-        Parameters
-        ----------
-        t: int
-            The time stamp parameter
-        reward: float
-            The reward of the evaluation
-        
-        Returns
-        -------
-        
-        """
-        self.curr_node.update_reward(reward)
-
-    def get_last_point(self):
-        """
-        The function to get the last point in SequOOL
-        
-        Returns
-        -------
-        point: list
-            The output of the SequOOL algorithm at last
-        """
-        max_node = None
-        max_value = -np.inf
-
-        for node in self.chosen:
-            if node.get_reward() >= max_value:
-                max_node = node
-                max_value = node.get_reward()
-
-        return max_node.get_cpoint()

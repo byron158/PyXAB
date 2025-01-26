@@ -16,7 +16,7 @@ class BinaryPartition(Partition):
     Implementation of Binary Partition
     """
 
-    def __init__(self, domain=None, node=P_node):
+    def __init__(self, domain=None, node=P_node, rng_seed=None):
         """
         Initialization of the Binary Partition
 
@@ -32,6 +32,7 @@ class BinaryPartition(Partition):
         """
         if domain is None:
             raise ValueError("domain is not provided to the Binary Partition")
+        self.rng_seed = rng_seed
         super(BinaryPartition, self).__init__(domain=domain, node=node)
 
     # Rewrite the make_children function in the Partition class
@@ -54,8 +55,10 @@ class BinaryPartition(Partition):
 
         """
 
+        rng = np.random.default_rng(self.rng_seed) #if rng_seed is not provided, generator will use the default seed
+
         parent_domain = parent.get_domain()
-        dim = np.random.randint(0, len(parent_domain))
+        dim = rng.integers(0, len(parent_domain))
         selected_dim = parent_domain[dim]
 
         domain1 = copy.deepcopy(parent_domain)
@@ -93,7 +96,7 @@ class BinaryPartitionWithLimits(BinaryPartition):
     Implementation of Binary Partition with limits on the minimum size of the partition and the minimum precision
     """
 
-    def __init__(self, domain=None, node=P_node, min_size=None, min_precision=None):
+    def __init__(self, domain=None, node=P_node, rng_seed = None, min_precision=None):
         """
         Initialization of the Binary Partition
 
@@ -109,8 +112,8 @@ class BinaryPartitionWithLimits(BinaryPartition):
         """
         if domain is None:
             raise ValueError("domain is not provided to the Binary Partition")
+        self.rng_seed = rng_seed
         super(BinaryPartitionWithLimits, self).__init__(domain=domain, node=node)
-        self.min_size = min_size
         self.min_precision = min_precision
     
 
@@ -134,21 +137,17 @@ class BinaryPartitionWithLimits(BinaryPartition):
 
         """
 
-        parent_domain = parent.get_domain()
-
         if not parent.is_splittable():
             return
+
+        parent_domain = parent.get_domain()
 
         splittable_dims = []
         for i, dim_range in enumerate(parent_domain): #check all dimensions to see if they are splittable, it they aren't they are removed from the parameter selection list for this node
             if self.min_precision is not None and (dim_range[1] - dim_range[0]) < self.min_precision: #this checks if the range of the domain is above the minimum precision
                 continue  # Skip dimensions that are smaller than min_precision
-            if self.min_size is None:
-                splittable_dims.append(i)  # No size constraint, all dimensions are splittable
             else:
-                mid_point = (dim_range[0] + dim_range[1]) / 2 
-                if (mid_point - dim_range[0]) >= self.min_size and (dim_range[1] - mid_point) >= self.min_size:
-                    splittable_dims.append(i)
+                splittable_dims.append(i) #add dimension to the list of splittable dimensions
 
         if not splittable_dims:
             #No dimensions are splittable; skip creating children
@@ -156,7 +155,8 @@ class BinaryPartitionWithLimits(BinaryPartition):
             print(f"No dimensions are splittable; skip creating children. Node point: {parent.get_cpoint()}")
             return
 
-        dim = np.random.choice(splittable_dims)
+        rng = np.random.default_rng(self.rng_seed) #if rng_seed is not provided, generator will use the default seed
+        dim = rng.choice(splittable_dims)
         selected_dim = parent_domain[dim]
 
         domain1 = copy.deepcopy(parent_domain)
