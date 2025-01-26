@@ -88,7 +88,7 @@ class SequOOL(Algorithm):
     The implementation of the SequOOL algorithm (Barlett, 2019)
     """
 
-    def __init__(self, n=1000, domain=None, partition=BinaryPartition):
+    def __init__(self, n=1000, domain=None, partition=BinaryPartition, rng_seed=None):
         """
         The initialization of the SequOOL algorithm
         
@@ -106,7 +106,7 @@ class SequOOL(Algorithm):
             raise ValueError("Parameter space is not given.")
         if partition is None:
             raise ValueError("Partition of the parameter space is not given.")
-        self.partition = partition(domain=domain, node=SequOOL_node)
+        self.partition = partition(domain=domain, node=SequOOL_node, rng_seed=rng_seed)
         self.iteration = 0
 
         self.h_max = math.floor(n / self.harmonic_series_sum(n))
@@ -250,7 +250,7 @@ class SequOOLWithLimits(SequOOL):
     The implementation of the SequOOL algorithm (Barlett, 2019), but with additional constraints on the minimum size of the domain and minimum precision
     """
     
-    def __init__(self, n=1000, domain=None, partition=BinaryPartitionWithLimits, min_precision = None):
+    def __init__(self, n=1000, domain=None, partition=BinaryPartitionWithLimits, rng_seed=None, min_precision = None):
         """
         The initialization of the SequOOL algorithm
         
@@ -268,7 +268,7 @@ class SequOOLWithLimits(SequOOL):
             raise ValueError("Parameter space is not given.")
         if partition is None:
             raise ValueError("Partition of the parameter space is not given.")
-        self.partition = partition(domain=domain, node=SequOOL_node, min_precision=min_precision)
+        self.partition = partition(domain=domain, node=SequOOL_node, rng_seed=rng_seed, min_precision=min_precision)
         self.iteration = 0
 
         self.h_max = math.floor(n / self.harmonic_series_sum(n))
